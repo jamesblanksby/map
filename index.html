@@ -1,0 +1,93 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/1.11.1/mapbox-gl.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/1.11.1/mapbox-gl.min.css" rel="stylesheet">
+
+<style>
+/* SCALED BY A FACTOR OF 2 TO INCREASE DETAIL */
+body { margin: 0; }
+#map {
+
+	/* width: calc(594mm * 2);
+	height: calc(420mm * 2); */
+
+	/* width: calc(594px * 2);
+	height: calc(429px * 2); */
+
+	width: calc(400mm * 2);
+	height: calc(300mm * 2);
+	
+	background-color: #f5f5f5;
+}
+button {
+	position: fixed;
+	top: 0;
+	right: 0;
+	display: none;
+}
+</style>
+
+<div id="map"></div>
+<button>Render</button>
+
+<script>
+Object.defineProperty(window, 'devicePixelRatio', { get: function() { return (300 / 96); } });
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiamFtZXNibGFua3NieSIsImEiOiJja2RidHR2bjAwZXBzMnpuYmVxYjQ1cTBjIn0.JFKTj52MZ2jErwQp2GXDNA';
+var map = new mapboxgl.Map({
+	container: 'map',
+	style: 'mapbox://styles/jamesblanksby/ckesn8ooo267g19uikok0sjz7/draft',
+	preserveDrawingBuffer: true,
+	attributionControl: false,
+});
+
+map.on('load', async function() {
+
+	// center
+	map.setZoom(14);
+	// map.setCenter([25.726967, 66.503059,]); // rovanimei
+	// map.setCenter([-2.32211, 51.22834,]); // frome
+
+
+
+	// /*
+	// track
+	var coordinates = await $.get('./track.json');
+	coordinates = coordinates.map(function(coord) { return coord.reverse(); });;
+	var layers = map.getStyle().layers;
+	var symbol_id;
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].type === 'symbol') {
+			symbol_id = layers[i].id;
+			break;
+		}
+	}
+	line = 2;
+	map.addLayer({
+		id: 'track',
+		type: 'line',
+		source: { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coordinates, },  }, },
+		paint: {
+			'line-color': '#ff0000',
+			'line-width': (line * 2),
+			'line-opacity': 1,
+		},
+	}, symbol_id);
+	var bounds = coordinates.reduce(function(bounds, coord) { return bounds.extend(coord); }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+	var padding = { top: 20, right: 20, bottom: 60, left: 20, };
+	Object.keys(padding).map(function(key) { padding[key] = (((padding[key] / 25.4) * 96) * 2); });
+	map.fitBounds(bounds, { duration: 0, padding: padding, });
+	// */
+
+});
+
+map.on('idle', function() { $('button').show(); });
+
+$('button').on('click', function() {
+	var canvas = map.getCanvas();
+	var data = canvas.toBlob(function(blob) {
+		var $a = $('<a>');
+		$a.attr('href', URL.createObjectURL(blob)).attr('download', 'map.png');
+		$a[0].click();
+	}, 'image/png');
+});
+</script>
